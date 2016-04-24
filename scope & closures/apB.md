@@ -5,6 +5,10 @@ In Chapter 3, we explored Block Scope. We saw that `with` and the `catch` clause
 
 But it's ES6's introduction of `let` that finally gives full, unfettered block-scoping capability to our code. There are many exciting things, both functionally and code-stylistically, that block scope will enable.
 
+>unfettered 
+CHINESE (SIMPLIFIED)
+不受约束
+
 But what if we wanted to use block scope in pre-ES6 environments?
 
 Consider this code:
@@ -27,6 +31,8 @@ try{throw 2}catch(a){
 
 console.log( a ); // ReferenceError
 ```
+
+>这种用法也是醉了,,,
 
 Whoa! That's some ugly, weird looking code. We see a `try/catch` that appears to forcibly throw an error, but the "error" it throws is just a value `2`, and then the variable declaration that receives it is in the `catch(a)` clause. Mind: blown.
 
