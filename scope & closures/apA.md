@@ -5,6 +5,13 @@ In Chapter 2, we talked about "Dynamic Scope" as a contrast to the "Lexical Scop
 
 We will briefly examine dynamic scope, to hammer home the contrast. But, more importantly, dynamic scope actually is a near cousin to another mechanism (`this`) in JavaScript, which we covered in the "*this & Object Prototypes*" title of this book series.
 
+>hammer
+锤子
+verb
+锤, 捶, 搥
+noun
+锤, 锤子, 槌, 钉锤, 榔, 椎, 锤骨
+
 As we saw in Chapter 2, lexical scope is the set of rules about how the *Engine* can look-up a variable and where it will find it. The key characteristic of lexical scope is that it is defined at author-time, when the code is written (assuming you don't cheat with `eval()` or `with`).
 
 Dynamic scope seems to imply, and for good reason, that there's a model whereby scope can be determined dynamically at runtime, rather than statically at author-time. That is in fact the case. Let's illustrate via code:
@@ -26,9 +33,13 @@ bar();
 
 Lexical scope holds that the RHS reference to `a` in `foo()` will be resolved to the global variable `a`, which will result in value `2` being output.
 
+>居然是 **2**!!! 看了整本scope & closures，这个居然还是感觉诧异,,,,我反省去了
+
 Dynamic scope, by contrast, doesn't concern itself with how and where functions and scopes are declared, but rather **where they are called from**. In other words, the scope chain is based on the call-stack, not the nesting of scopes in code.
 
 So, if JavaScript had dynamic scope, when `foo()` is executed, **theoretically** the code below would instead result in `3` as the output.
+
+>注意，以下是举反例---假设JavaScript had dynamic scope.....而如下下文所述，JS只在this上像是dynamic的
 
 ```js
 function foo() {
