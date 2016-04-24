@@ -15,6 +15,8 @@ But, where and how do these *Scope* rules get set?
 
 It may be self-evident, or it may be surprising, depending on your level of interaction with various languages, but despite the fact that JavaScript falls under the general category of "dynamic" or "interpreted" languages, it is in fact a compiled language. It is *not* compiled well in advance, as are many traditionally-compiled languages, nor are the results of compilation portable among various distributed systems.
 
+>**this is most shock part. JS is a complied language.**
+
 But, nevertheless, the JavaScript engine performs many of the same steps, albeit in more sophisticated ways than we may commonly be aware, of any traditional language-compiler.
 
 In traditional compiled-language process, a chunk of source code, your program, will undergo typically three steps *before* it is executed, roughly called "compilation":
@@ -39,6 +41,8 @@ So, I'm painting only with broad strokes here. But I think you'll see shortly wh
 
 For one thing, JavaScript engines don't get the luxury (like other language compilers) of having plenty of time to optimize, because JavaScript compilation doesn't happen in a build step ahead of time, as with other languages.
 
+>This is interesting. You can just remember it as a connection to other knowledge points. JS donot get the luxury of having plenty of time to optimize, so the compilation can not be such a complex.
+
 For JavaScript, the compilation that occurs happens, in many cases, mere microseconds (or less!) before the code is executed. To ensure the fastest performance, JS engines use all kinds of tricks (like JITs, which lazy compile and even hot re-compile, etc.) which are well beyond the "scope" of our discussion here.
 
 Let's just say, for simplicity's sake, that any snippet of JavaScript has to be compiled before (usually *right* before!) it's executed. So, the JS compiler will take the program `var a = 2;` and compile it *first*, and then be ready to execute it, usually right away.
@@ -56,6 +60,8 @@ Let's meet the cast of characters that interact to process the program `var a = 
 2. *Compiler*: one of *Engine*'s friends; handles all the dirty work of parsing and code-generation (see previous section).
 
 3. *Scope*: another friend of *Engine*; collects and maintains a look-up list of all the declared identifiers (variables), and enforces a strict set of rules as to how these are accessible to currently executing code.
+
+>Importanct concept of JS. If something is too complex to understand, you should do like this. Splite them as small as you can, then make them clear. Even they are hard to splite, you can still find a way to splite them apart in logical way.
 
 For you to *fully understand* how JavaScript works, you need to begin to *think* like *Engine* (and friends) think, ask the questions they ask, and answer those questions the same.
 
@@ -79,6 +85,8 @@ If *Engine* eventually finds a variable, it assigns the value `2` to it. If not,
 
 To summarize: two distinct actions are taken for a variable assignment: First, *Compiler* declares a variable (if not previously declared in the current scope), and second, when executing, *Engine* looks up the variable in *Scope* and assigns to it, if found.
 
+>**summarize :arrow_up:**
+
 ### Compiler Speak
 
 We need a little bit more compiler terminology to proceed further with understanding.
@@ -92,6 +100,8 @@ I bet you can guess what the "L" and "R" mean. These terms stand for "Left-hand 
 Side... of what? **Of an assignment operation.**
 
 In other words, an LHS look-up is done when a variable appears on the left-hand side of an assignment operation, and an RHS look-up is done when a variable appears on the right-hand side of an assignment operation.
+
+>this is easiest way to distinguish LHS and RHS look-up.
 
 Actually, let's be a little more precise. An RHS look-up is indistinguishable, for our purposes, from simply a look-up of the value of some variable, whereas the LHS look-up is trying to find the variable container itself, so that it can assign. In this way, RHS doesn't *really* mean "right-hand side of an assignment" per se, it just, more accurately, means "not left-hand side".
 
@@ -116,6 +126,8 @@ a = 2;
 The reference to `a` here is an LHS reference, because we don't actually care what the current value is, we simply want to find the variable as a target for the `= 2` assignment operation.
 
 **Note:** LHS and RHS meaning "left/right-hand side of an assignment" doesn't necessarily literally mean "left/right side of the `=` assignment operator". There are several other ways that assignments happen, and so it's better to conceptually think about it as: "who's the target of the assignment (LHS)" and "who's the source of the assignment (RHS)".
+
+>LHS is to find container/target, RHS is to find value/source.
 
 Consider this program, which has both LHS and RHS references:
 
@@ -196,6 +208,8 @@ var c = foo( 2 );
 
 2. Identify all the RHS look-ups (there are 4!).
 
+> 4 times of RHS! 2 is also a kind of RHS look-ups.
+
 **Note:** See the chapter review for the quiz answers!
 
 ## Nested Scope
@@ -242,6 +256,8 @@ You resolve LHS and RHS references by looking on your current floor, and if you 
 
 ## Errors
 
+> this part is more important than you think. It connect the underground (LHS or RHS look-ups) with the surface(error).
+
 Why does it matter whether we call it LHS or RHS?
 
 Because these two types of look-ups behave differently in the circumstance where the variable has not yet been declared (is not found in any consulted *Scope*).
@@ -270,6 +286,10 @@ By contrast, if the *Engine* is performing an LHS look-up and arrives at the top
 Now, if a variable is found for an RHS look-up, but you try to do something with its value that is impossible, such as trying to execute-as-function a non-function value, or reference a property on a `null` or `undefined` value, then *Engine* throws a different kind of error, called a `TypeError`.
 
 `ReferenceError` is *Scope* resolution-failure related, whereas `TypeError` implies that *Scope* resolution was successful, but that there was an illegal/impossible action attempted against the result.
+
+>In strict mode, LHS failure will get `ReferenceError`, in normal mode, LHS will create a variable when it cannot find the name in the scope.
+
+>RHS failure will lead to `ReferenceError`; if RHS look-up succeed, but the developer use the wrong method or property, `TypeError` occurs.
 
 ## Review (TL;DR)
 
