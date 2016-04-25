@@ -15,6 +15,10 @@ foo( 2 ); // 2
 
 The so-called "fat arrow" is often mentioned as a short-hand for the *tediously verbose* (sarcasm) `function` keyword.
 
+>sarcasm
+讽刺
+irony, satire, sarcasm, caricature, quip, lampoon
+
 But there's something much more important going on with arrow-functions that has nothing to do with saving keystrokes in your declaration.
 
 Briefly, this code suffers a problem:
@@ -59,6 +63,18 @@ obj.cool(); // awesome?
 
 Without getting too much into the weeds here, the `var self = this` "solution" just dispenses with the whole problem of understanding and properly using `this` binding, and instead falls back to something we're perhaps more comfortable with: lexical scope. `self` becomes just an identifier that can be resolved via lexical scope and closure, and cares not what happened to the `this` binding along the way.
 
+>weed杂草
+
+>dispense
+发放
+grant, extend, provide, disseminate, deliver, dispense
+配药
+dispense, prescribe
+豁免
+exempt, release, excuse, dispense, absolve, discharge
+发给
+give, grant, deliver, dispense, assign, provide
+
 People don't like writing verbose stuff, especially when they do it over and over again. So, a motivation of ES6 is to help alleviate these scenarios, and indeed, *fix* common idiom problems, such as this one.
 
 The ES6 solution, the arrow-function, introduces a behavior called "lexical this".
@@ -79,15 +95,27 @@ var obj = {
 obj.cool(); // awesome?
 ```
 
+>TODO:
+
 The short explanation is that arrow-functions do not behave at all like normal functions when it comes to their `this` binding. They discard all the normal rules for `this` binding, and instead take on the `this` value of their immediate lexical enclosing scope, whatever it is.
+
+> 先记住这个short explanation
 
 So, in that snippet, the arrow-function doesn't get its `this` unbound in some unpredictable way, it just "inherits" the `this` binding of the `cool()` function (which is correct if we invoke it as shown!).
 
+>重要，好好想想。inherites `this` binding of `cool()` function
+
 While this makes for shorter code, my perspective is that arrow-functions are really just codifying into the language syntax a common *mistake* of developers, which is to confuse and conflate "this binding" rules with "lexical scope" rules.
+
+>conflate
+合并
+merge, combine, incorporate, amalgamate, coalesce, conflate
 
 Put another way: why go to the trouble and verbosity of using the `this` style coding paradigm, only to cut it off at the knees by mixing it with lexical references. It seems natural to embrace one approach or the other for any given piece of code, and not mix them in the same piece of code.
 
 **Note:** one other detraction from arrow-functions is that they are anonymous, not named. See Chapter 3 for the reasons why anonymous functions are less desirable than named functions.
+
+>不好查错
 
 A more appropriate approach, in my perspective, to this "problem", is to use and embrace the `this` mechanism correctly.
 
@@ -106,6 +134,8 @@ var obj = {
 
 obj.cool(); // more awesome
 ```
+
+>TODO:
 
 Whether you prefer the new lexical-this behavior of arrow-functions, or you prefer the tried-and-true `bind()`, it's important to note that arrow-functions are **not** just about less typing of "function".
 
