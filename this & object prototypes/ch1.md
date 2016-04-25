@@ -125,9 +125,19 @@ console.log( foo.count ); // 0 -- WTF?
 
 `foo.count` is *still* `0`, even though the four `console.log` statements clearly indicate `foo(..)` was in fact called four times. The frustration stems from a *too literal* interpretation of what `this` (in `this.count++`) means.
 
+>stems from有点长出来的那种感觉? 
+
 When the code executes `foo.count = 0`, indeed it's adding a property `count` to the function object `foo`. But for the `this.count` reference inside of the function, `this` is not in fact pointing *at all* to that function object, and so even though the property names are the same, the root objects are different, and confusion ensues.
 
+>ensues
+
 **Note:** A responsible developer *should* ask at this point, "If I was incrementing a `count` property but it wasn't the one I expected, which `count` *was* I incrementing?" In fact, were she to dig deeper, she would find that she had accidentally created a global variable `count` (see Chapter 2 for *how* that happened!), and it currently has the value `NaN`. Of course, once she identifies this peculiar outcome, she then has a whole other set of questions: "How was it global, and why did it end up `NaN` instead of some proper count value?" (see Chapter 2).
+
+>peculiar
+
+> 变成了全局变量这个可以理解
+
+> 把代码中的this，改成foo也可以运行成功，但是和这里说的一样， 也是绕过了this机制，回到了scope上，后面有讲。注意，这里是scope机制，但this并不代表当前的scope，在后面第二个误解处有讲！
 
 Instead of stopping at this point and digging into why the `this` reference doesn't seem to be behaving as *expected*, and answering those tough but important questions, many developers simply avoid the issue altogether, and hack toward some other solution, such as creating another object to hold the `count` property:
 
@@ -163,7 +173,13 @@ While it is true that this approach "solves" the problem, unfortunately it simpl
 
 **Note:** Lexical scope is a perfectly fine and useful mechanism; I am not belittling the use of it, by any means (see *"Scope & Closures"* title of this book series). But constantly *guessing* at how to use `this`, and usually being *wrong*, is not a good reason to retreat back to lexical scope and never learn *why* `this` eludes you.
 
+>belittling轻视
+
+>eludes躲开
+
 To reference a function object from inside itself, `this` by itself will typically be insufficient. You generally need a reference to the function object via a lexical identifier (variable) that points at it.
+
+>其实这正是前面的误解，this指向的并不是foo这个函数对象，所以这里在考虑need a reference to the function object
 
 Consider these two functions:
 
@@ -181,6 +197,8 @@ setTimeout( function(){
 In the first function, called a "named function", `foo` is a reference that can be used to refer to the function from inside itself.
 
 But in the second example, the function callback passed to `setTimeout(..)` has no name identifier (so called an "anonymous function"), so there's no proper way to refer to the function object itself.
+
+>~~嚯嚯嚯！我觉得马上要引入this了，但往哪里引呢？self?~~
 
 **Note:** The old-school but now deprecated and frowned-upon `arguments.callee` reference inside a function *also* points to the function object of the currently executing function. This reference is typically the only way to access an anonymous function's object from inside itself. The best approach, however, is to avoid the use of anonymous functions altogether, at least for those which require a self-reference, and instead use a named function (expression). `arguments.callee` is deprecated and should not be used.
 
@@ -246,6 +264,8 @@ for (i=0; i<10; i++) {
 console.log( foo.count ); // 4
 ```
 
+>wow, 这就是call, apply之类的意义！终于明白call之类的意义了，泪流满面:kissing_heart:
+
 **Instead of avoiding `this`, we embrace it.** We'll explain in a little bit *how* such techniques work much more completely, so don't worry if you're still a bit confused!
 
 ### Its Scope
@@ -269,7 +289,13 @@ function bar() {
 foo(); //undefined
 ```
 
+>这一节scope，直接打消了上一节有可能出现的不正确想法。
+
 There's more than one mistake in this snippet. While it may seem contrived, the code you see is a distillation of actual real-world code that has been exchanged in public community help forums. It's a wonderful (if not sad) illustration of just how misguided `this` assumptions can be.
+
+> contrived
+
+> distillation
 
 Firstly, an attempt is made to reference the `bar()` function via `this.bar()`. It is almost certainly an *accident* that it works, but we'll explain the *how* of that shortly. The most natural way to have invoked `bar()` would have been to omit the leading `this.` and just make a lexical reference to the identifier.
 
@@ -282,6 +308,8 @@ Every time you feel yourself trying to mix lexical scope look-ups with `this`, r
 Having set aside various incorrect assumptions, let us now turn our attention to how the `this` mechanism really works.
 
 We said earlier that `this` is not an author-time binding but a runtime binding. It is contextual based on the conditions of the function's invocation. `this` binding has nothing to do with where a function is declared, but has instead everything to do with the manner in which the function is called.
+
+>精华内容！`this`是一个runtime binding！你用author-time binding去分析它自然不对
 
 When a function is invoked, an activation record, otherwise known as an execution context, is created. This record contains information about where the function was called from (the call-stack), *how* the function was invoked, what parameters were passed, etc. One of the properties of this record is the `this` reference which will be used for the duration of that function's execution.
 
