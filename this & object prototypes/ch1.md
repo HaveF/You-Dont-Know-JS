@@ -3,11 +3,22 @@
 
 One of the most confused mechanisms in JavaScript is the `this` keyword. It's a special identifier keyword that's automatically defined in the scope of every function, but what exactly it refers to bedevils even seasoned JavaScript developers.
 
+>seasoned
+/adjective
+老练
+experienced, seasoned
+
 > Any sufficiently *advanced* technology is indistinguishable from magic. -- Arthur C. Clarke
 
 JavaScript's `this` mechanism isn't actually *that* advanced, but developers often paraphrase that quote in their own mind by inserting "complex" or "confusing", and there's no question that without lack of clear understanding, `this` can seem downright magical in *your* confusion.
 
+>downright
+彻头彻尾
+downright, through and through
+
 **Note:** The word "this" is a terribly common pronoun in general discourse. So, it can be very difficult, especially verbally, to determine whether we are using "this" as a pronoun or using it to refer to the actual keyword identifier. For clarity, I will always use `this` to refer to the special keyword, and "this" or *this* or this otherwise.
+
+>pronoun代词
 
 ## Why `this`?
 
@@ -62,11 +73,15 @@ speak( me ); // Hello, I'm KYLE
 
 However, the `this` mechanism provides a more elegant way of implicitly "passing along" an object reference, leading to cleaner API design and easier re-use.
 
+> more cleaner API design and easier re-use
+
 The more complex your usage pattern is, the more clearly you'll see that passing context around as an explicit parameter is often messier than passing around a `this` context. When we explore objects and prototypes, you will see the helpfulness of a collection of functions being able to automatically reference the proper context object.
 
 ## Confusions
 
 We'll soon begin to explain how `this` *actually* works, but first we must  dispel some misconceptions about how it *doesn't* actually work.
+
+>dispel打消
 
 The name "this" creates confusion when developers try to think about it too literally. There are two meanings often assumed, but both are incorrect.
 
