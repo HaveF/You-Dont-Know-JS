@@ -7,6 +7,8 @@ In Chapter 1, we discarded various misconceptions about `this` and learned inste
 
 To understand `this` binding, we have to understand the call-site: the location in code where a function is called (**not where it's declared**). We must inspect the call-site to answer the question: what's *this* `this` a reference to?
 
+>这个就是让人在js中最容易弄混的地方，this是找call-site，scope却是在找declared的地方
+
 Finding the call-site is generally: "go locate where a function is called from", but it's not always that easy, as certain coding patterns can obscure the *true* call-site.
 
 What's important is to think about the **call-stack** (the stack of functions that have been called to get us to the current moment in execution). The call-site we care about is *in* the invocation *before* the currently executing function.
@@ -43,6 +45,8 @@ baz(); // <-- call-site for `baz`
 Take care when analyzing code to find the actual call-site (from the call-stack), because it's the only thing that matters for `this` binding.
 
 **Note:** You can visualize a call-stack in your mind by looking at the chain of function calls in order, as we did with the comments in the above snippet. But this is painstaking and error-prone. Another way of seeing the call-stack is using a debugger tool in your browser. Most modern desktop browsers have built-in developer tools, which includes a JS debugger. In the above snippet, you could have set a breakpoint in the tools for the first line of the `foo()` function, or simply inserted the `debugger;` statement on that first line. When you run the page, the debugger will pause at this location, and will show you a list of the functions that have been called to get to that line, which will be your call stack. So, if you're trying to diagnose `this` binding, use the developer tools to get the call-stack, then find the second item from the top, and that will show you the real call-site.
+
+>要会加断点，加`debugger;`，利用developer tools寻找call-site和`this`
 
 ## Nothing But Rules
 
@@ -88,6 +92,8 @@ foo(); // TypeError: `this` is `undefined`
 
 A subtle but important detail is: even though the overall `this` binding rules are entirely based on the call-site, the global object is **only** eligible for the *default binding* if the **contents** of `foo()` are **not** running in `strict mode`; the `strict mode` state of the call-site of `foo()` is irrelevant.
 
+>eligible
+
 ```js
 function foo() {
 	console.log( this.a );
@@ -101,6 +107,8 @@ var a = 2;
 	foo(); // 2
 })();
 ```
+
+>TODO: 这个怎么解释？
 
 **Note:** Intentionally mixing `strict mode` and non-`strict mode` together in your own code is generally frowned upon. Your entire program should probably either be **Strict** or **non-Strict**. However, sometimes you include a third-party library that has different **Strict**'ness than your own code, so care must be taken over these subtle compatibility details.
 
@@ -127,11 +135,17 @@ Firstly, notice the manner in which `foo()` is declared and then later added as 
 
 However, the call-site *uses* the `obj` context to **reference** the function, so you *could* say that the `obj` object "owns" or "contains" the **function reference** at the time the function is called.
 
+>这里说的比较模糊,,,,只承认在调用的时候'owns'或'contains' the **function reference**, 而这个obj不是'owns'或'contains'这个函数
+
 Whatever you choose to call this pattern, at the point that `foo()` is called, it's preceded by an object reference to `obj`. When there is a context object for a function reference, the *implicit binding* rule says that it's *that* object which should be used for the function call's `this` binding.
+
+>When there is a context object for a function reference, the *implicit binding* rule says that it's *that* object which should be used for the function call's `this` binding. 多读两遍
 
 Because `obj` is the `this` for the `foo()` call, `this.a` is synonymous with `obj.a`.
 
 Only the top/last level of an object property reference chain matters to the call-site. For instance:
+
+>the top/last level 这个和直观是一样的
 
 ```js
 function foo() {
@@ -176,6 +190,8 @@ bar(); // "oops, global"
 
 Even though `bar` appears to be a reference to `obj.foo`, in fact, it's really just another reference to `foo` itself. Moreover, the call-site is what matters, and the call-site is `bar()`, which is a plain, un-decorated call and thus the *default binding* applies.
 
+> 好好想想这个，bar is just another reference, 所以它在call的时候，会直接指向global 的 a.
+
 The more subtle, more common, and more unexpected way this occurs is when we consider passing a callback function:
 
 ```js
@@ -200,6 +216,8 @@ doFoo( obj.foo ); // "oops, global"
 ```
 
 Parameter passing is just an implicit assignment, and since we're passing a function, it's an implicit reference assignment, so the end result is the same as the previous snippet.
+
+>这个和上面那个bar异曲同工！太容易出错了！parameter passing is just an implicit assignment!
 
 What if the function you're passing your callback to is not your own, but built-in to the language? No difference, same outcome.
 
@@ -229,17 +247,27 @@ function setTimeout(fn,delay) {
 
 It's quite common that our function callbacks *lose* their `this` binding, as we've just seen. But another way that `this` can surprise us is when the function we've passed our callback to intentionally changes the `this` for the call. Event handlers in popular JavaScript libraries are quite fond of forcing your callback to have a `this` which points to, for instance, the DOM element that triggered the event. While that may sometimes be useful, other times it can be downright infuriating. Unfortunately, these tools rarely let you choose.
 
+> TODO: 这个还一下两下理解不能
+
 Either way the `this` is changed unexpectedly, you are not really in control of how your callback function reference will be executed, so you have no way (yet) of controlling the call-site to give your intended binding. We'll see shortly a way of "fixing" that problem by *fixing* the `this`.
+
+> 这里的fixing双关---一意是固定，一意是修正
 
 ### Explicit Binding
 
 With *implicit binding* as we just saw, we had to mutate the object in question to include a reference on itself to the function, and use this property function reference to indirectly (implicitly) bind `this` to the object.
 
+> 总结一下*implicit binding*两步，一是要include a reference on itself to the function，二是要indirectly(implicitly) bind `this` to the object. 就是前面的例子一是要在object中写function reference作为其中的一个成员，二在function用this就可以了。
+
 But, what if you want to force a function call to use a particular object for the `this` binding, without putting a property function reference on the object?
 
 "All" functions in the language have some utilities available to them (via their `[[Prototype]]` -- more on that later) which can be useful for this task. Specifically, functions have `call(..)` and `apply(..)` methods. Technically, JavaScript host environments sometimes provide functions which are special enough (a kind way of putting it!) that they do not have such functionality. But those are few. The vast majority of functions provided, and certainly all functions you will create, do have access to `call(..)` and `apply(..)`.
 
+> 对于某些特例，比如js host environments的相关函数有时是没有call, apply这样的方法的，但大多数都有。这是我们Explicit Binding的重要工具。
+
 How do these utilities work? They both take, as their first parameter, an object to use for the `this`, and then invoke the function with that `this` specified. Since you are directly stating what you want the `this` to be, we call it *explicit binding*.
+
+>因为是每个人自己指定的this, 所以叫explicit binding咯
 
 Consider:
 
@@ -259,9 +287,13 @@ Invoking `foo` with *explicit binding* by `foo.call(..)` allows us to force its 
 
 If you pass a simple primitive value (of type `string`, `boolean`, or `number`) as the `this` binding, the primitive value is wrapped in its object-form (`new String(..)`, `new Boolean(..)`, or `new Number(..)`, respectively). This is often referred to as "boxing".
 
+>primitive value原始值
+
 **Note:** With respect to `this` binding, `call(..)` and `apply(..)` are identical. They *do* behave differently with their additional parameters, but that's not something we care about presently.
 
 Unfortunately, *explicit binding* alone still doesn't offer any solution to the issue mentioned previously, of a function "losing" its intended `this` binding, or just having it paved over by a framework, etc.
+
+>TODO: ??? or just having it paved over by a framework, etc.
 
 #### Hard Binding
 
@@ -288,6 +320,8 @@ setTimeout( bar, 100 ); // 2
 bar.call( window ); // 2
 ```
 
+>其实我主要觉得他这里overriden的方式不对劲,,,,hard binds，就像是hard code一样，而非理解成strong的意思
+
 Let's examine how this variation works. We create a function `bar()` which, internally, manually calls `foo.call(obj)`, thereby forcibly invoking `foo` with `obj` binding for `this`. No matter how you later invoke the function `bar`, it will always manually invoke `foo` with `obj`. This binding is both explicit and strong, so we call it *hard binding*.
 
 The most typical way to wrap a function with a *hard binding* creates a pass-thru of any arguments passed and any return value received:
@@ -309,6 +343,8 @@ var bar = function() {
 var b = bar( 3 ); // 2 3
 console.log( b ); // 5
 ```
+
+>arguments要记得会写哦
 
 Another way to express this pattern is to create a re-usable helper:
 
@@ -335,7 +371,13 @@ var b = bar( 3 ); // 2 3
 console.log( b ); // 5
 ```
 
+>所以说js的bind其实里面就是apply, call之类的呗??
+
+> bind里面为什么是先return 一个function? 原因就是,,,,apply之后是一个结果啊, 朋友，但我这里不想要结果，我只想要能产生结果的函数
+
 Since *hard binding* is such a common pattern, it's provided with a built-in utility as of ES5: `Function.prototype.bind`, and it's used like this:
+
+>ES5 
 
 ```js
 function foo(something) {
@@ -357,6 +399,8 @@ console.log( b ); // 5
 
 **Note:** As of ES6, the hard-bound function produced by `bind(..)` has a `.name` property that derives from the original *target function*. For example: `bar = foo.bind(..)` should have a `bar.name` value of `"bound foo"`, which is the function call name that should show up in a stack trace.
 
+>ES6好啊，bind之后还能看绑定对象的名字
+
 #### API Call "Contexts"
 
 Many libraries' functions, and indeed many new built-in functions in the JavaScript language and host environment, provide an optional parameter, usually called "context", which is designed as a work-around for you not having to use `bind(..)` to ensure your callback function uses a particular `this`.
@@ -376,7 +420,9 @@ var obj = {
 [1, 2, 3].forEach( foo, obj ); // 1 awesome  2 awesome  3 awesome
 ```
 
-Internally, these various functions almost certainly use *explicit binding* via `call(..)` or `apply(..)`, saving you the trouble.
+Internally, these various functions almost certainly use *explicit binding* via `call(..)` or `apply(..)`, saving you the trouble.‘
+
+>"Contexts" 很方便，要注意观察有哪些函数提供了这样的功能
 
 ### `new` Binding
 
@@ -392,6 +438,8 @@ JavaScript has a `new` operator, and the code pattern to use it looks basically 
 
 First, let's re-define what a "constructor" in JavaScript is. In JS, constructors are **just functions** that happen to be called with the `new` operator in front of them. They are not attached to classes, nor are they instantiating a class. They are not even special types of functions. They're just regular functions that are, in essence, hijacked by the use of `new` in their invocation.
 
+>TODO: 木有懂，所以呢？其它语言的constructor不就是这样吗
+
 For example, the `Number(..)` function acting as a constructor, quoting from the ES5.1 spec:
 
 > 15.7.2 The Number Constructor
@@ -399,6 +447,8 @@ For example, the `Number(..)` function acting as a constructor, quoting from the
 > When Number is called as part of a new expression it is a constructor: it initialises the newly created object.
 
 So, pretty much any ol' function, including the built-in object functions like `Number(..)` (see Chapter 3) can be called with `new` in front of it, and that makes that function call a *constructor call*. This is an important but subtle distinction: there's really no such thing as "constructor functions", but rather construction calls *of* functions.
+
+>ol' function???
 
 When a function is invoked with `new` in front of it, otherwise known as a constructor call, the following things are done automatically:
 
@@ -421,6 +471,8 @@ console.log( bar.a ); // 2
 ```
 
 By calling `foo(..)` with `new` in front of it, we've constructed a new object and set that new object as the `this` for the call of `foo(..)`. **So `new` is the final way that a function call's `this` can be bound.** We'll call this *new binding*.
+
+>TODO: ??? 这个暂时还理解不能
 
 ## Everything In Order
 
@@ -478,6 +530,8 @@ console.log( obj1.a ); // 2
 console.log( bar.a ); // 4
 ```
 
+>上面的含义是先隐式绑定，又显式绑定-----绑定成功，说明显示绑定优先级比隐式绑定高，最后再用new binding，new binding绑定成功，说明新绑定比隐式绑定优先级高
+
 OK, *new binding* is more precedent than *implicit binding*. But do you think *new binding* is more or less precedent than *explicit binding*?
 
 **Note:** `new` and `call`/`apply` cannot be used together, so `new foo.call(obj1)` is not allowed, to test *new binding* directly against *explicit binding*. But we can still use a *hard binding* to test the precedence of the two rules.
@@ -505,6 +559,8 @@ console.log( baz.a ); // 3
 ```
 
 Whoa! `bar` is hard-bound against `obj1`, but `new bar(3)` did **not** change `obj1.a` to be `3` as we would have expected. Instead, the *hard bound* (to `obj1`) call to `bar(..)` ***is*** able to be overridden with `new`. Since `new` was applied, we got the newly created object back, which we named `baz`, and we see in fact that  `baz.a` has the value `3`.
+
+>为什么会惊讶,,,,之前使用new binding时，new之后就是会生成baz.a啊....在惊讶什么 - -;
 
 This should be surprising if you go back to our "fake" bind helper:
 
@@ -555,6 +611,8 @@ if (!Function.prototype.bind) {
 
 **Note:** The `bind(..)` polyfill shown above differs from the built-in `bind(..)` in ES5 with respect to hard-bound functions that will be used with `new` (see below for why that's useful). Because the polyfill cannot create a function without a `.prototype` as the built-in utility does, there's some nuanced indirection to approximate the same behavior. Tread carefully if you plan to use `new` with a hard-bound function and you rely on this polyfill.
 
+>:open_mouth: TODO:???
+
 The part that's allowing `new` overriding is:
 
 ```js
@@ -568,6 +626,8 @@ fBound.prototype = new fNOP();
 ```
 
 We won't actually dive into explaining how this trickery works (it's complicated and beyond our scope here), but essentially the utility determines whether or not the hard-bound function has been called with `new` (resulting in a newly constructed object being its `this`), and if so, it uses *that* newly created `this` rather than the previously specified *hard binding* for `this`.
+
+>TODO: 得，上面看不懂，先记下面下面的结论吧~~
 
 Why is `new` being able to override *hard binding* useful?
 
@@ -667,6 +727,8 @@ Since this object is totally empty, I personally like to give it the variable na
 
 Whatever you call it, the easiest way to set it up as **totally empty** is `Object.create(null)` (see Chapter 5). `Object.create(null)` is similar to `{ }`, but without the delegation to `Object.prototype`, so it's "more empty" than just `{ }`.
 
+>好吧...more empty. Object.create(null) 比 {} more empty，但如果比较懒的话,,,就用null凑合吧，出了问题再说:thought_balloon:
+
 ```js
 function foo(a,b) {
 	console.log( "a:" + a + ", b:" + b );
@@ -688,6 +750,8 @@ Not only functionally "safer", there's a sort of stylistic benefit to `ø`, in t
 ### Indirection
 
 Another thing to be aware of is you can (intentionally or not!) create "indirect references" to functions, and in those cases,  when that function reference is invoked, the *default binding* rule also applies.
+
+>intentionally故意地
 
 One of the most common ways that *indirect references* occur is from an assignment:
 
@@ -764,6 +828,8 @@ setTimeout( obj2.foo, 10 ); // name: obj   <---- falls back to soft-binding
 ```
 
 The soft-bound version of the `foo()` function can be manually `this`-bound to `obj2` or `obj3` as shown, but it falls back to `obj` if the *default binding* would otherwise apply.
+
+>TODO: 这个已经超出我的理解范畴了
 
 ## Lexical `this`
 
@@ -855,3 +921,5 @@ Determining the `this` binding for an executing function requires finding the di
 Be careful of accidental/unintentional invoking of the *default binding* rule. In cases where you want to "safely" ignore a `this` binding, a "DMZ" object like `ø = Object.create(null)` is a good placeholder value that protects the `global` object from unintended side-effects.
 
 Instead of the four standard binding rules, ES6 arrow-functions use lexical scoping for `this` binding, which means they adopt the `this` binding (whatever it is) from its enclosing function call. They are essentially a syntactic replacement of `self = this` in pre-ES6 coding.
+
+> 看完之后，觉得`this`还是个迷啊,,,,虽然稍微清晰了一点点
